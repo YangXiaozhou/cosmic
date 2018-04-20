@@ -75,7 +75,7 @@ else
         ps.bus(ismember(ps.bus(:,1),ps.gen(ref,1)),C.bu.type) = C.REF;
     end
     
-    % updata the frequency signal sources for every load bus
+    % update the frequency signal sources for every load bus
     ps = update_load_freq_source(ps);
     
     % recalculate algebraic variables according to the updated Ybus

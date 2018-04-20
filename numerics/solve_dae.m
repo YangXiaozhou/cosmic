@@ -44,6 +44,7 @@ t0 = t_span(1);
 % default time step
 t_final = t_span(end);
 dt0     = dt_max*0.10;
+%dt0     = dt_max*1/30;
 t_steps = t0;
 % get the initial state of the dae system
 f0 = f(t0,x0,y0);
