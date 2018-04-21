@@ -115,18 +115,18 @@ omega_pu = omega / omega_0;
 
 sim_results = table(t, theta);
 
-% plot some variables
-figure(1); clf; hold on; 
-nl = size(theta,2); colorset = varycolor(nl);
-% set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[-0.2 0.5]);
-plot(t,theta);
-ylabel('\theta','FontSize',18);
-xlabel('time (sec.)','FontSize',18);
-
-
-figure(2); clf; hold on; 
-nl = size(Vmag,2); colorset = varycolor(nl);
-% set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[0.88 1.08]);
-plot(t,Vmag);
-ylabel('|V|','FontSize',18);
-xlabel('time (sec.)','FontSize',18);
+% % plot some variables
+% figure(1); clf; hold on; 
+% nl = size(theta,2); colorset = varycolor(nl);
+% % set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[-0.2 0.5]);
+% plot(t,theta);
+% ylabel('\theta','FontSize',18);
+% xlabel('time (sec.)','FontSize',18);
+% 
+% 
+% figure(2); clf; hold on; 
+% nl = size(Vmag,2); colorset = varycolor(nl);
+% % set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[0.88 1.08]);
+% plot(t,Vmag);
+% ylabel('|V|','FontSize',18);
+% xlabel('time (sec.)','FontSize',18);

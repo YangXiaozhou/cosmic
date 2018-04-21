@@ -148,10 +148,11 @@ ps.shunt = [...
  39 1104 250 0 0 1 1 1000 1 0.08;
 ];
 
-% add a small perturbation to P of ps.shunt
+% add a small perturbation to P & Q of ps.shunt
 % i.e. standard normal random number
 % to resemble small changes in load
-ps.shunt(:, 2) = ps.shunt(:, 2) + randn();
+ps.shunt(:, 2) = ps.shunt(:, 2) + 0.1*randn();
+ps.shunt(:, 3) = ps.shunt(:, 3) + 0.1*randn();
 
 ps.exc = [...
 %gen type Ka Ta Tb Ke Te Urmax Urmin Vref Efd E1 
