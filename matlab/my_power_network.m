@@ -1,5 +1,5 @@
-function [sim_results] = my_power_network(pmu_loc) 
-% usage: [sim_results] = my_power_network(pmu_loc)
+function [sim_results] = my_power_network(line_to_be_outed) 
+% usage: [sim_results] = my_power_network(pmu_loc, line_to_be_outed)
 % simulate my defined power network for one instance
 % inputs:
 %  ps           - powersystem structure. see psconstants.
@@ -17,7 +17,7 @@ function [sim_results] = my_power_network(pmu_loc)
 %  ps               - the powersystem structure at the end of the simulation.
 
 %% simulate 39-bus case
-%clear variables; 
+clearvars -except line_to_be_outed;
 close all; clc; C = psconstants;
 
 % do not touch path if we are deploying code
@@ -95,10 +95,14 @@ event = zeros(3,C.ev.cols);
 % start
 event(1,[C.ev.time C.ev.type]) = [0 C.ev.start];
 % trip a branch
-event(2,[C.ev.time C.ev.type]) = [3 C.ev.trip_branch];
-event(2,C.ev.branch_loc) = 14;
+if line_to_be_outed == 0  % there is no line outage
+    event(2,[C.ev.time C.ev.type]) = [t_max C.ev.finish];
+else
+    event(2,[C.ev.time C.ev.type]) = [3 C.ev.trip_branch];
+    event(2,C.ev.branch_loc) = line_to_be_outed;
+    event(3,[C.ev.time C.ev.type]) = [t_max C.ev.finish];
+end
 % set the end time
-event(3,[C.ev.time C.ev.type]) = [t_max C.ev.finish];
 
 %% run the simulation
 [outputs,ps] = simgrid(ps,event,'sim_case39',opt);
