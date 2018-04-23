@@ -2,19 +2,10 @@ function [sim_results] = my_power_network(line_to_be_outed)
 % usage: [sim_results] = my_power_network(pmu_loc, line_to_be_outed)
 % simulate my defined power network for one instance
 % inputs:
-%  ps           - powersystem structure. see psconstants.
-%  event        - a matrix defining the exogenous events to simulate. see psconstants.
-%  outfilename  - the name for the output file
-%  opt          - an option structure. see psoptions.
+%  line_to_be_outed     - line id for which the outage is simulated, i = 1, ..., L
 % outputs:
-%  outputs.         - a structure of output data, including the following:
-%    .success       - a bool flag indicating whether we were able to simulate to the end.
-%    .t_simulated   - vector of time periods in the final results.
-%    .outfilename   - the name of the file where the results are stored.
-%    .demand_lost   - the amount of demand that was shed during the simulation.
-%    .computer_time - the amount of wall-clock time required to perform this simulation
-%    .endo_events   - matrix that logs endogenous events during the simulation.
-%  ps               - the powersystem structure at the end of the simulation.
+%  sim_results          - a table of simulation results:
+
 
 %% simulate 39-bus case
 clearvars -except line_to_be_outed;
@@ -33,6 +24,17 @@ t_max = 10;
 ps = updateps(case39_ps);
 ps = unify_generators(ps); 
 ps.branch(:,C.br.tap)       = 1;
+
+% configure stochastic loads by
+% adding a small perturbation to P & Q of ps.shunt
+% i.e. change by a percentage between -percentage and percentage
+% to resemble small changes in load
+percentage = 0.2;
+[row, ~] = size(ps.shunt);
+rand_num = percentage + (percentage+percentage)*rand(row,1);
+ps.shunt(:, 2) = ps.shunt(:, 2) .* (1+rand_num);
+rand_num = percentage + (percentage+percentage)*rand(row,1);
+ps.shunt(:, 3) = ps.shunt(:, 3) .* (1+rand_num);
 
 % configure load profiles
 ps.shunt(:,C.sh.factor)     = 1;
