@@ -8,8 +8,7 @@ function [sim_results] = my_power_network(line_to_be_outed)
 
 
 %% simulate 39-bus case
-clearvars -except line_to_be_outed;
-close all; clc; C = psconstants;
+clearvars -except line_to_be_outed; close all; clc; C = psconstants;
 
 % do not touch path if we are deploying code
 if ~(ismcc || isdeployed)
@@ -22,21 +21,9 @@ t_max = 10;
 
 % select data case to simulate
 ps = updateps(case39_ps);
+% ps = replicate_case(ps,2);          
 ps = unify_generators(ps); 
 ps.branch(:,C.br.tap)       = 1;
-
-% configure stochastic loads by
-% adding a small perturbation to P & Q of ps.shunt
-% i.e. change by a percentage between -percentage and percentage
-% to resemble small changes in load
-percentage = 0.2;
-[row, ~] = size(ps.shunt);
-rand_num = percentage + (percentage+percentage)*rand(row,1);
-ps.shunt(:, 2) = ps.shunt(:, 2) .* (1+rand_num);
-rand_num = percentage + (percentage+percentage)*rand(row,1);
-ps.shunt(:, 3) = ps.shunt(:, 3) .* (1+rand_num);
-
-% configure load profiles
 ps.shunt(:,C.sh.factor)     = 1;
 ps.shunt(:,C.sh.status)     = 1;
 ps.shunt(:,C.sh.frac_S)     = 1;
@@ -61,10 +48,10 @@ opt.sim.gen_control = 1;        % 0 = generator without exciter and governor, 1 
 opt.sim.angle_ref = 0;          % 0 = delta_sys, 1 = center of inertia---delta_coi
                                 % Center of inertia doesn't work when having islanding
 opt.sim.COI_weight = 0;         % 1 = machine inertia, 0 = machine MVA base(Powerworld)
-opt.sim.uvls_tdelay_ini = t_max;  % t_max sec delay for uvls relay.
-opt.sim.ufls_tdelay_ini = t_max;  % t_max sec delay for ufls relay.
-opt.sim.dist_tdelay_ini = t_max;  % t_max sec delay for dist relay.
-opt.sim.temp_tdelay_ini = t_max;    % t_max sec delay for temp relay.
+opt.sim.uvls_tdelay_ini = 0.5;  % 1 sec delay for uvls relay.
+opt.sim.ufls_tdelay_ini = 0.5;  % 1 sec delay for ufls relay.
+opt.sim.dist_tdelay_ini = 0.5;  % 1 sec delay for dist relay.
+opt.sim.temp_tdelay_ini = 0;    % 0 sec delay for temp relay.
 % Don't forget to change this value (opt.sim.time_delay_ini) in solve_dae.m
 
 % initialize the case
@@ -93,23 +80,26 @@ dist2threshold = inf(size(ix.re.oc,2)*2,1);
 state_a = zeros(size(ix.re.oc,2)*2,1);
 
 %% build an event matrix
-event = zeros(3,C.ev.cols);
+event = zeros(4,C.ev.cols);
 % start
 event(1,[C.ev.time C.ev.type]) = [0 C.ev.start];
-% trip a branch
 if line_to_be_outed == 0  % there is no line outage
     event(2,[C.ev.time C.ev.type]) = [t_max C.ev.finish];
 else
-    event(2,[C.ev.time C.ev.type]) = [3 C.ev.trip_branch];
-    event(2,C.ev.branch_loc) = line_to_be_outed;
-    event(3,[C.ev.time C.ev.type]) = [t_max C.ev.finish];
+    % trip a branch
+    event(2,[C.ev.time C.ev.type]) = [1 C.ev.trip_branch];
+    event(2,C.ev.branch_loc) = 2;
+    % trip a branch
+    event(3,[C.ev.time C.ev.type]) = [5 C.ev.trip_branch];
+    event(3,C.ev.branch_loc) = line_to_be_outed;
+    % set the end time
+    event(4,[C.ev.time C.ev.type]) = [t_max C.ev.finish];
 end
-% set the end time
 
 %% run the simulation
 [outputs,ps] = simgrid(ps,event,'sim_case39',opt);
 
-% print the results
+%% print the results
 fname = outputs.outfilename;
 [t,delta,omega,Pm,Eap,Vmag,theta,E1,Efd,P3,Temperature] = read_outfile(fname,ps,opt);
 omega_0 = 2*pi*ps.frequency;
@@ -117,18 +107,9 @@ omega_pu = omega / omega_0;
 
 sim_results = table(t, theta);
 
-% % plot some variables
-% figure(1); clf; hold on; 
-% nl = size(theta,2); colorset = varycolor(nl);
-% % set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[-0.2 0.5]);
-% plot(t,theta);
-% ylabel('\theta','FontSize',18);
-% xlabel('time (sec.)','FontSize',18);
-% 
-% 
-% figure(2); clf; hold on; 
-% nl = size(Vmag,2); colorset = varycolor(nl);
-% % set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[0.88 1.08]);
-% plot(t,Vmag);
-% ylabel('|V|','FontSize',18);
-% xlabel('time (sec.)','FontSize',18);
+figure(1); clf; hold on; 
+nl = size(theta,2); colorset = varycolor(nl);
+% set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[-0.2 0.5]);
+plot(t,theta);
+ylabel('\theta','FontSize',18);
+xlabel('time (sec.)','FontSize',18);

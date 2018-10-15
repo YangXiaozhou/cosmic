@@ -39,7 +39,10 @@ switch mode
         relay = zeros(n_shunt,C.relay.cols);
         relay(:,C.re.type)      = C.relay.uvls;
         relay(:,C.re.shunt_loc) = ps.shunt(:,C.sh.bus);
-        relay(:,C.re.threshold) = opt.sim.uvls_limit;
+        
+%         relay(:,C.re.threshold) = opt.sim.uvls_limit;
+        relay(:,C.re.threshold) = 0.1;
+        
         relay(:,C.re.setting1)  = opt.sim.uvls_delta; % the amount of load to shedd on undervoltage
         relay(:,C.re.tripped)   = 0;
         relay(:,C.re.id)        = 1:n_shunt;

@@ -86,6 +86,7 @@ Q_trans = sparse(I,1,Q_IK,n,1);
 % calculate load
 load_locs = ps.bus_i(ps.shunt(:,1));
 Vd = Vmags(load_locs);
+
 Pd_base = ps.shunt(:,C.sh.P) .* ps.shunt(:,C.sh.factor)/ps.baseMVA;
 Qd_base = ps.shunt(:,C.sh.Q) .* ps.shunt(:,C.sh.factor)/ps.baseMVA;
 % compute the load that comes from the const impedance factor
@@ -113,9 +114,26 @@ Qgen = (Eaps.*mac_Vmags./Xdps).*cos(delta_m) - ...
 mac_P = sparse(mac_bus_i,1,Pgen,n,1);
 mac_Q = sparse(mac_bus_i,1,Qgen,n,1);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% configure stochastic loads by
+% adding a small perturbation to P & Q of ps.shunt
+% i.e. change by a percentage between -percentage and percentage
+% to resemble small changes in load
+output_P = P_trans - mac_P + Pd_bus;
+output_Q = Q_trans - mac_Q + Qd_bus;
+
+percentage = 0.05;
+[row, ~] = size(output_P);
+rand_num = -percentage + (percentage+percentage) .* rand(row,1);
+output_P = output_P .* (1+rand_num);
+rand_num = -percentage + (percentage+percentage) .* rand(row,1);
+output_Q = output_Q .* (1+rand_num);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 % output
-g(ix.g.P)       = P_trans - mac_P + Pd_bus;
-g(ix.g.Q)       = Q_trans - mac_Q + Qd_bus;
+g(ix.g.P)       = output_P;
+g(ix.g.Q)       = output_Q;
 if ~angle_ref
     g(ix.g.slack)   = Thetas(is_slack) - Theta_slack;
 end
