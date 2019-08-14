@@ -1,5 +1,14 @@
+function [sim_results] = my_9_bus_system(line_to_be_outed) 
+% usage: [sim_results] = my_9_bus_system(pmu_loc, line_to_be_outed)
+% simulate my defined power network for one instance
+% inputs:
+%  line_to_be_outed     - line id for which the outage is simulated, i = 1, ..., L
+% outputs:
+%  sim_results          - a table of simulation results:
+
+
 %% simulate 9-bus case
-clear all; close all; clc; C = psconstants;
+clearvars -except line_to_be_outed; close all; clc; C = psconstants;
 
 % do not touch path if we are deploying code
 if ~(ismcc || isdeployed)
@@ -8,7 +17,6 @@ if ~(ismcc || isdeployed)
 end
 
 % simulation time
-% t_max = 30;
 t_max = 10;
 
 % select data case to simulate
@@ -28,7 +36,7 @@ ps.branch(rateC_rateA==1,C.br.rateC)    = 1.5 * ps.branch(rateC_rateA==1,C.br.ra
 % set some options
 opt = psoptions;
 opt.sim.integration_scheme = 1;
-opt.sim.dt_default = 1/30;
+opt.sim.dt_default = 1/10;
 opt.nr.use_fsolve = true;
 % opt.pf.linesearch = 'cubic_spline';
 opt.verbose = true;
@@ -72,26 +80,22 @@ state_a = zeros(size(ix.re.oc,2)*2,1);
 event = zeros(4,C.ev.cols);
 % start
 event(1,[C.ev.time C.ev.type]) = [0 C.ev.start];
-% % trip a branch
-% % event(2,[C.ev.time C.ev.type]) = [10 C.ev.trip_branch];
-event(2,[C.ev.time C.ev.type]) = [3 C.ev.trip_branch];
-event(2,C.ev.branch_loc) = 6;
-
-% trip a branch
-% event(3,[C.ev.time C.ev.type]) = [10 C.ev.trip_branch];
-% event(3,C.ev.branch_loc) = 6;
-% % close a branch
-% event(3,[C.ev.time C.ev.type]) = [10.1 C.ev.close_branch];
-% event(3,C.ev.branch_loc) = 7;
-% trip a shunt
-% event(3,[C.ev.time C.ev.type]) = [5 C.ev.trip_shunt];
-% event(3,C.ev.shunt_loc) = 1;
-
-% set the end time
-event(4,[C.ev.time C.ev.type]) = [t_max C.ev.finish];
+if line_to_be_outed == 0  % there is no line outage
+    event(2,[C.ev.time C.ev.type]) = [t_max C.ev.finish];
+else
+    % trip a branch
+    event(2,[C.ev.time C.ev.type]) = [3 C.ev.trip_branch];
+    event(2,C.ev.branch_loc) = line_to_be_outed;
+    % trip a branch
+%     event(3,[C.ev.time C.ev.type]) = [3 C.ev.trip_branch];
+%     event(3,C.ev.branch_loc) = line_to_be_outed;
+    % set the end time
+    event(4,[C.ev.time C.ev.type]) = [t_max C.ev.finish];
+end
 
 %% run the simulation
 [outputs,ps] = simgrid(ps,event,'sim_case9',opt);
+
 
 %% print the results
 fname = outputs.outfilename;
@@ -99,74 +103,21 @@ fname = outputs.outfilename;
 omega_0 = 2*pi*ps.frequency;
 omega_pu = omega / omega_0;
 
+sim_results = table(t, theta, Vmag);
 
 figure(1); clf; hold on; 
-nl = size(omega_pu,2); colorset = varycolor(nl);
-% set(gca,'ColorOrder',colorset,'FontSize',18,'Xtick',[0 600 1200 1800],...
-%     'Xlim',[0 50],'Ylim',[0.995 1.008]);
-plot(t,omega_pu);
-ylabel('\omega (pu)','FontSize',18);
-xlabel('time (sec.)','FontSize',18);
-% PrintStr = sprintf('OmegaPu_P_%s_%s_%s',CaseName, Contingency, Control);
-% print('-dpng','-r600',PrintStr)
-%%
-figure(2); clf; hold on; 
 nl = size(theta,2); colorset = varycolor(nl);
 % set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[-0.2 0.5]);
 plot(t,theta);
 ylabel('\theta','FontSize',18);
 xlabel('time (sec.)','FontSize',18);
-%%
 
-% figure(3); clf; hold on; 
-% nl = size(Vmag,2); colorset = varycolor(nl);
-% % set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[0.88 1.08]);
-% plot(t,Vmag);
-% ylabel('|V|','FontSize',18);
-% xlabel('time (sec.)','FontSize',18);
-% 
-% 
-% figure(5); clf; hold on; 
-% nl = size(Pm,2); colorset = varycolor(nl);
-% % set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[0.88 1.08]);
-% plot(t,Pm);
-% ylabel('Pm','FontSize',18);
-% xlabel('time (sec.)','FontSize',18);
-% 
-% figure(6); clf; hold on; 
-% nl = size(delta,2); colorset = varycolor(nl);
-% % set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[0.88 1.08]);
-% % plot(t',delta'.*180./pi);
-% plot(t,delta);
-% ylabel('Delta','FontSize',18);
-% xlabel('time (sec.)','FontSize',18);
-% 
-% figure(7); clf; hold on; 
-% nl = size(Eap,2); colorset = varycolor(nl);
-% % set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[0.88 1.08]);
-% plot(t,Eap);
-% ylabel('Eap','FontSize',18);
-% xlabel('time (sec.)','FontSize',18);
-% 
-% figure(8); clf; hold on; 
-% nl = size(E1,2); colorset = varycolor(nl);
-% % set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[0.88 1.08]);
-% plot(t,E1);
-% ylabel('E1','FontSize',18);
-% xlabel('time (sec.)','FontSize',18);
-% 
-% figure(9); clf; hold on; 
-% nl = size(Efd,2); colorset = varycolor(nl);
-% % set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[0.88 1.08]);
-% plot(t,Efd);
-% ylabel('Efd','FontSize',18);
-% xlabel('time (sec.)','FontSize',18);    
-% 
-% figure(10); clf; hold on; 
-% nl = size(Temperature,2); colorset = varycolor(nl);
-% % set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[0.88 1.08]);
-% plot(t,Temperature);
-% ylabel('Temperature ( ^{\circ}C)','Interpreter','tex','FontSize',18);
-% xlabel('time (sec.)','FontSize',18);
+
+figure(2); clf; hold on; 
+nl = size(Vmag,2); colorset = varycolor(nl);
+% set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[0.88 1.08]);
+plot(t,Vmag);
+ylabel('|V|','FontSize',18);
+xlabel('time (sec.)','FontSize',18);
 
 

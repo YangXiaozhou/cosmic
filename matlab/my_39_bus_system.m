@@ -1,5 +1,5 @@
-function [sim_results] = my_power_network(line_to_be_outed) 
-% usage: [sim_results] = my_power_network(pmu_loc, line_to_be_outed)
+function [sim_results] = my_39_bus_system(line_to_be_outed) 
+% usage: [sim_results] = my_39_bus_system(pmu_loc, line_to_be_outed)
 % simulate my defined power network for one instance
 % inputs:
 %  line_to_be_outed     - line id for which the outage is simulated, i = 1, ..., L
@@ -30,6 +30,7 @@ ps.shunt(:,C.sh.frac_S)     = 1;
 ps.shunt(:,C.sh.frac_E)     = 0;
 ps.shunt(:,C.sh.frac_Z)     = 0;
 ps.shunt(:,C.sh.gamma)      = 0.08;
+
 
 % to differentiate the line MVA ratings
 rateB_rateA                     = ps.branch(:,C.br.rateB)./ps.branch(:,C.br.rateA);
@@ -87,17 +88,18 @@ if line_to_be_outed == 0  % there is no line outage
     event(2,[C.ev.time C.ev.type]) = [t_max C.ev.finish];
 else
     % trip a branch
-    event(2,[C.ev.time C.ev.type]) = [1 C.ev.trip_branch];
-    event(2,C.ev.branch_loc) = 2;
+%     event(2,[C.ev.time C.ev.type]) = [1 C.ev.trip_branch];
+%     event(2,C.ev.branch_loc) = 2;
     % trip a branch
-    event(3,[C.ev.time C.ev.type]) = [5 C.ev.trip_branch];
-    event(3,C.ev.branch_loc) = line_to_be_outed;
+    event(2,[C.ev.time C.ev.type]) = [3 C.ev.trip_branch];
+    event(2,C.ev.branch_loc) = line_to_be_outed;
     % set the end time
-    event(4,[C.ev.time C.ev.type]) = [t_max C.ev.finish];
+    event(3,[C.ev.time C.ev.type]) = [t_max C.ev.finish];
 end
 
 %% run the simulation
 [outputs,ps] = simgrid(ps,event,'sim_case39',opt);
+
 
 %% print the results
 fname = outputs.outfilename;
@@ -105,11 +107,19 @@ fname = outputs.outfilename;
 omega_0 = 2*pi*ps.frequency;
 omega_pu = omega / omega_0;
 
-sim_results = table(t, theta);
+sim_results = table(t, theta, Vmag);
 
 figure(1); clf; hold on; 
 nl = size(theta,2); colorset = varycolor(nl);
 % set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[-0.2 0.5]);
 plot(t,theta);
 ylabel('\theta','FontSize',18);
+xlabel('time (sec.)','FontSize',18);
+
+
+figure(2); clf; hold on; 
+nl = size(Vmag,2); colorset = varycolor(nl);
+% set(gca,'ColorOrder',colorset,'FontSize',18,'Xlim',[0 50],'Ylim',[0.88 1.08]);
+plot(t,Vmag);
+ylabel('|V|','FontSize',18);
 xlabel('time (sec.)','FontSize',18);

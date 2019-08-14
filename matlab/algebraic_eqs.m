@@ -105,6 +105,9 @@ Qd_const_E = Qd_base .* Vd.^ps.shunt(:,C.sh.gamma) .* ps.shunt(:,C.sh.frac_E);
 Pd_bus = sparse(ps.bus_i(ps.shunt(:,1)),1, Pd_const_Z + Pd_const_I + Pd_const_S + Pd_const_E, size(ps.bus,1),1);
 Qd_bus = sparse(ps.bus_i(ps.shunt(:,1)),1, Qd_const_Z + Qd_const_I + Qd_const_S + Qd_const_E, size(ps.bus,1),1);
 
+
+
+
 % calculate P and Q for the machines
 Pgen = (Eaps.*mac_Vmags./Xdps).*sin(delta_m) +...
     (mac_Vmags.^2./2).*(1./Xqs-1./Xdps).*sin(2*delta_m); % eq. 7.81, Bergen & Vittal

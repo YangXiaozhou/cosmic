@@ -21,7 +21,7 @@ global t_delay t_prev_check dist2threshold
 
 % constants, sizes and defaults
 max_newton_its  = opt.sim.max_iters; % maximum number of newton iterations
-abs_tol         = opt.sim.tolerance; % newton convergence tolerance
+abs_tol         = 1 * opt.sim.tolerance; % newton convergence tolerance
 dif_tol_min     = 0.01;              % increase step size
 dif_tol_max     = 0.05;              % decrease step size
 dt_min          = 0.005;             % default min step size
@@ -68,6 +68,13 @@ while t0<t_final
         dt = t1-t0;
     end  % integrate up to t_final
     x1 = x0 + f0*dt;    % could use second order estimate here
+
+% Add disturbance to y1
+%     percentage = 0.05;
+%     [row, ~] = size(y0);
+%     rand_num = -percentage + (percentage+percentage) .* rand(row,1);
+%     y0 = y0 .* (1+rand_num);
+
     y1 = y0;            % could solve for something more intelligent
     % print something
 %     fprintf(' t = %f sec. and dt = %f sec...\n',t0,dt);
@@ -82,9 +89,9 @@ while t0<t_final
         trapz_mismatch  = [x0 - x1 + (dt/2).*f0 + (dt/2).*f1;   % f portion
             g1];                                                % g portion
         max_trap_mis = max(abs(trapz_mismatch));
-%         fprintf('   Mismatch = %g\n',max_trap_mis);
+        % fprintf('   Mismatch = %g\n',max_trap_mis);
         if max_trap_mis < abs_tol
-            %fprintf('.converged in %d iterations with alpha=%g ...\n',newton_it,alpha);
+            fprintf('.converged in %d iterations with alpha=%g ...\n',newton_it,alpha_0);
             % if it converged, first check for any events at t0<th<t1
             % [outputs] = get_event_thresholds(inputs)
             break;
